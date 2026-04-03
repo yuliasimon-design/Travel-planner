@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>旅行計畫本</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Noto+Serif+TC:wght@300;400;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* ── 新配色 ── */
+    --moon-blue: #5B8DB8;       /* 月光海藍 */
+    --moon-blue-light: #7AADD4;
+    --pearl: #E8DDD0;           /* 珍珠貝殼 */
+    --pearl-deep: #F5F0EA;      /* 淺珍珠底色 */
+    --teal: #2D7D7A;            /* 深海青碧 */
+    --teal-light: #4A9E9B;
+    --silver: #B8C4CC;          /* 銀霧白 */
+    --amber: #C8943A;           /* 琥珀金 */
+    --amber-light: #DFB060;
+    --lavender: #9B84B8;        /* 薰衣草暮 */
+    --lavender-light: #B8A4D0;
+    /* ── 通用 ── */
+    --bg: #EEE8DF;
+    --cream: #F7F3EE;
+    --ink: #1C2B35;
+    --ink-light: #3D4F5C;
+    --ink-muted: #7A8C96;
+    --border: #D0C8BC;
+    --white: #FDFBF8;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:var(--bg); color:var(--ink); font-family:'DM Sans','Noto Serif TC',sans-serif; min-height:100vh; }
+
+  /* COVER */
+  #cover {
+    min-height:100vh; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; position:relative; overflow:hidden;
+    background:linear-gradient(150deg, #1A3A4A 0%, #2D5F6E 35%, #2D7D7A 65%, #5B8DB8 100%);
+  }
+  #cover::after {
+    content:''; position:absolute; inset:0; pointer-events:none;
+    background: radial-gradient(ellipse at 70% 30%, rgba(155,132,184,.18) 0%, transparent 60%),
+                radial-gradient(ellipse at 20% 80%, rgba(91,141,184,.15) 0%, transparent 50%);
+  }
+  #cover.hidden { display:none !important; }
+  .cover-label { font-size:11px; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.45); margin-bottom:32px; position:relative; z-index:1; }
+  .cover-title-main { font-family:'Playfair Display',serif; font-size:clamp(52px,8vw,96px); font-weight:400; color:#fff; line-height:1; text-align:center; position:relative; z-index:1; }
+  .cover-title-main em { font-style:italic; color:var(--amber-light); }
+  .cover-divider { width:1px; height:60px; background:linear-gradient(to bottom,transparent,rgba(255,255,255,.35),transparent); margin:32px auto; position:relative; z-index:1; }
+  .cover-form { display:flex; flex-direction:column; gap:16px; width:min(400px,90vw); align-items:center; position:relative; z-index:1; }
+  .cover-input-group { width:100%; }
+  .cover-input-group label { display:block; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.4); margin-bottom:6px; }
+  .cover-input-group input { width:100%; background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); border-radius:2px; padding:12px 16px; color:#fff; font-size:15px; font-family:'Noto Serif TC',serif; outline:none; transition:border-color .2s,background .2s; }
+  .cover-input-group input::placeholder { color:rgba(255,255,255,.22); }
+  .cover-input-group input:focus { border-color:var(--amber-light); background:rgba(255,255,255,.13); }
+  .cover-dates { display:grid; grid-template-columns:1fr 1fr; gap:12px; width:100%; }
+  #start-btn { margin-top:8px; padding:14px 48px; background:var(--amber); color:#fff; border:none; font-size:12px; letter-spacing:3px; text-transform:uppercase; cursor:pointer; transition:background .2s,transform .1s; border-radius:1px; }
+  #start-btn:hover { background:var(--amber-light); transform:translateY(-1px); }
+
+  /* APP */
+  #app { display:none; }
+  .app-header { background:linear-gradient(135deg, #1A3A4A, #2D7D7A); padding:20px 32px; display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; position:sticky; top:0; z-index:100; box-shadow:0 2px 12px rgba(29,61,78,.25); }
+  .app-header-title { font-family:'Playfair Display',serif; font-size:20px; color:#fff; font-weight:400; }
+  .app-header-title em { font-style:italic; color:var(--amber-light); }
+  .app-header-meta { font-size:11px; color:rgba(255,255,255,.45); margin-top:2px; }
+  .nav-tabs { display:flex; gap:4px; background:rgba(0,0,0,.18); padding:4px; border-radius:4px; }
+  .nav-tab { padding:7px 16px; font-size:11px; letter-spacing:1px; color:rgba(255,255,255,.45); cursor:pointer; border-radius:2px; border:none; background:none; font-family:'DM Sans',sans-serif; white-space:nowrap; transition:all .2s; }
+  .nav-tab.active { background:var(--amber); color:#fff; }
+  .nav-tab:hover:not(.active) { color:rgba(255,255,255,.85); }
+
+  /* SECTIONS */
+  .section { display:none; padding:36px min(36px,5vw); max-width:880px; margin:0 auto; }
+  .section.active { display:block; }
+  .section-eyebrow { font-size:10px; letter-spacing:4px; text-transform:uppercase; color:var(--moon-blue); margin-bottom:6px; }
+  .section-title { font-family:'Playfair Display',serif; font-size:34px; font-weight:400; margin-bottom:6px; color:var(--ink); }
+  .section-subtitle { font-size:13px; color:var(--ink-muted); margin-bottom:28px; }
+
+  /* SUMMARY */
+  .summary-strip { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:32px; }
+  .summary-card { background:var(--white); border:1px solid var(--border); border-radius:4px; padding:14px 18px; text-align:center; }
+  .summary-card .num { font-family:'Playfair Display',serif; font-size:30px; font-weight:700; color:var(--teal); line-height:1; }
+  .summary-card .lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-muted); margin-top:4px; }
+
+  /* CHECKLIST */
+  .checklist-group { background:var(--cream); border:1px solid var(--border); border-radius:4px; margin-bottom:18px; overflow:hidden; }
+  .cg-header { display:flex; align-items:center; justify-content:space-between; padding:14px 18px; background:var(--white); border-bottom:1px solid var(--border); cursor:pointer; user-select:none; }
+  .cg-title { display:flex; align-items:center; gap:10px; font-size:12px; letter-spacing:2px; text-transform:uppercase; font-weight:500; color:var(--ink); }
+  .g-icon { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:13px; flex-shrink:0; }
+  .g-icon.tc { background:#DDE9F4; }   /* 月光海藍 淡 */
+  .g-icon.fo { background:#D2EEEC; }   /* 深海青碧 淡 */
+  .g-icon.go { background:#F5EAD8; }   /* 琥珀金 淡 */
+  .g-icon.sk { background:#EAE5F2; }   /* 薰衣草暮 淡 */
+  .cg-right { display:flex; align-items:center; gap:10px; }
+  .g-progress { font-size:11px; color:var(--ink-muted); }
+  .prog-wrap { width:70px; height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:4px; }
+  .prog-fill { height:100%; background:linear-gradient(90deg, var(--teal), var(--moon-blue)); border-radius:2px; transition:width .4s; }
+  .chevron { font-size:11px; color:var(--silver); transition:transform .2s; }
+  .cg-collapsed .chevron { transform:rotate(-90deg); }
+  .cg-collapsed .cg-body { display:none; }
+  .ci { display:flex; align-items:center; gap:10px; padding:9px 18px; transition:background .15s; }
+  .ci:hover { background:rgba(91,141,184,.04); }
+  .checkbox { width:17px; height:17px; border:1.5px solid var(--silver); border-radius:2px; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--white); transition:all .15s; }
+  .ci.done .checkbox { background:var(--teal); border-color:var(--teal); }
+  .checkbox::after { content:''; width:9px; height:5px; border-left:1.5px solid #fff; border-bottom:1.5px solid #fff; transform:rotate(-45deg) translateY(-1px); opacity:0; transition:opacity .15s; }
+  .ci.done .checkbox::after { opacity:1; }
+  .ci-label { font-size:13px; color:var(--ink-light); flex:1; font-family:'Noto Serif TC',serif; font-weight:300; cursor:pointer; line-height:1.5; }
+  .ci.done .ci-label { color:var(--ink-muted); text-decoration:line-through; text-decoration-color:var(--silver); }
+  .badge { font-size:10px; padding:2px 7px; border-radius:10px; flex-shrink:0; }
+  .b-must { background:#DDE9F4; color:var(--moon-blue); }
+  .b-opt { background:#EAE5F2; color:var(--lavender); }
+  .ci-del { width:22px; height:22px; border:none; background:none; color:var(--silver); cursor:pointer; font-size:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; transition:all .15s; opacity:0; }
+  .ci:hover .ci-del { opacity:1; }
+  .ci-del:hover { color:var(--moon-blue); background:#DDE9F4; }
+  .add-row { display:flex; gap:8px; padding:8px 18px 12px; border-top:1px dashed var(--border); }
+  .add-inp { flex:1; border:none; border-bottom:1px solid var(--border); background:none; padding:5px 2px; font-size:13px; color:var(--ink); font-family:'Noto Serif TC',serif; outline:none; }
+  .add-inp:focus { border-color:var(--teal); }
+  .add-inp::placeholder { color:var(--ink-muted); }
+  .add-sel { border:1px solid var(--border); background:var(--white); padding:4px 6px; font-size:12px; border-radius:2px; outline:none; color:var(--ink-light); }
+  .add-btn { padding:5px 14px; background:var(--teal); color:#fff; border:none; border-radius:2px; font-size:12px; cursor:pointer; white-space:nowrap; transition:background .15s; }
+  .add-btn:hover { background:var(--teal-light); }
+
+  /* LUGGAGE TABS */
+  .lug-tabs { display:flex; border-bottom:2px solid var(--border); margin-bottom:24px; }
+  .lug-tab { padding:9px 22px; font-size:11px; letter-spacing:2px; text-transform:uppercase; color:var(--ink-muted); cursor:pointer; border-bottom:2px solid transparent; margin-bottom:-2px; border:none; background:none; transition:all .2s; }
+  .lug-tab.active { color:var(--moon-blue); border-bottom:2px solid var(--moon-blue); }
+  .lug-view { display:none; }
+  .lug-view.active { display:block; }
+
+  /* ITINERARY */
+  .day-card { background:var(--cream); border:1px solid var(--border); border-radius:4px; margin-bottom:18px; overflow:hidden; }
+  .day-header { display:grid; grid-template-columns:56px 1fr auto; align-items:center; gap:14px; padding:16px 20px; background:var(--white); border-bottom:1px solid var(--border); }
+  .day-num { font-family:'Playfair Display',serif; font-size:26px; font-weight:700; color:var(--moon-blue); line-height:1; }
+  .day-num span { display:block; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--silver); font-family:'DM Sans',sans-serif; font-weight:400; margin-top:2px; }
+  .day-title-inp { border:none; background:none; font-family:'Playfair Display',serif; font-size:17px; color:var(--ink); outline:none; width:100%; border-bottom:1px dashed transparent; padding:2px 0; transition:border-color .2s; }
+  .day-title-inp:focus { border-color:var(--amber); }
+  .day-title-inp::placeholder { color:var(--silver); font-style:italic; }
+  .day-del { background:none; border:none; color:var(--silver); cursor:pointer; font-size:18px; padding:4px; transition:color .15s; }
+  .day-del:hover { color:var(--moon-blue); }
+  .ev-item { display:grid; grid-template-columns:58px 1fr auto; align-items:start; gap:10px; padding:9px 20px; transition:background .15s; }
+  .ev-item:hover { background:rgba(91,141,184,.04); }
+  .ev-time { font-size:12px; color:var(--amber); font-weight:500; padding-top:2px; }
+  .ev-title-inp { border:none; background:none; font-size:13px; color:var(--ink-light); font-family:'Noto Serif TC',serif; font-weight:300; width:100%; outline:none; border-bottom:1px dashed transparent; padding:1px 0; transition:border-color .2s; }
+  .ev-title-inp:focus { border-color:var(--lavender); }
+  .ev-note-inp { border:none; background:none; font-size:11px; color:var(--ink-muted); width:100%; outline:none; padding:2px 0; margin-top:2px; }
+  .ev-note-inp::placeholder { color:var(--silver); font-style:italic; }
+  .ev-del { background:none; border:none; color:var(--silver); cursor:pointer; font-size:16px; opacity:0; padding-top:2px; transition:color .15s; }
+  .ev-item:hover .ev-del { opacity:1; }
+  .ev-del:hover { color:var(--moon-blue); }
+  .add-ev-row { display:grid; grid-template-columns:58px 1fr auto; gap:10px; padding:8px 20px 14px; border-top:1px dashed var(--border); align-items:center; }
+  .add-ev-time { border:1px solid var(--border); background:var(--white); padding:5px; font-size:12px; border-radius:2px; outline:none; width:100%; color:var(--ink-light); }
+  .add-ev-title { border:none; border-bottom:1px solid var(--border); background:none; padding:5px 2px; font-size:13px; color:var(--ink); font-family:'Noto Serif TC',serif; outline:none; }
+  .add-ev-title:focus { border-color:var(--lavender); }
+  .add-ev-title::placeholder { color:var(--ink-muted); }
+  .add-day-btn { display:flex; align-items:center; justify-content:center; gap:8px; padding:14px; border:2px dashed var(--border); background:none; border-radius:4px; width:100%; color:var(--ink-muted); font-size:13px; font-family:'DM Sans',sans-serif; cursor:pointer; transition:all .2s; letter-spacing:1px; margin-bottom:32px; }
+  .add-day-btn:hover { border-color:var(--teal); color:var(--teal); background:rgba(45,125,122,.05); }
+
+  @media(max-width:600px){
+    .app-header{padding:14px 16px;}
+    .section{padding:24px 16px;}
+    .summary-strip{grid-template-columns:1fr 1fr;}
+    .nav-tab{font-size:10px;padding:6px 10px;}
+  }
+</style>
+</head>
+<body>
+
+<div id="cover">
+  <p class="cover-label">Travel Planner · 旅行計畫本</p>
+  <h1 class="cover-title-main">出<em>發</em><br>前的一切</h1>
+  <div class="cover-divider"></div>
+  <div class="cover-form">
+    <div class="cover-input-group">
+      <label>目的地 Destination</label>
+      <input type="text" id="dest-input" placeholder="東京、巴黎、曼谷⋯" />
+    </div>
+    <div class="cover-dates">
+      <div class="cover-input-group">
+        <label>出發日期</label>
+        <input type="date" id="date-start" />
+      </div>
+      <div class="cover-input-group">
+        <label>回程日期</label>
+        <input type="date" id="date-end" />
+      </div>
+    </div>
+    <button id="start-btn">開始規劃 →</button>
+  </div>
+</div>
+
+<div id="app">
+  <header class="app-header">
+    <div>
+      <div class="app-header-title" id="header-title">旅行計畫本</div>
+      <div class="app-header-meta" id="header-meta"></div>
+    </div>
+    <nav class="nav-tabs">
+      <button class="nav-tab active" id="nav-prep">✦ 出發前準備</button>
+      <button class="nav-tab" id="nav-luggage">✦ 行李清單</button>
+      <button class="nav-tab" id="nav-itinerary">✦ 每日行程</button>
+    </nav>
+  </header>
+
+  <section id="tab-prep" class="section active">
+    <p class="section-eyebrow">Before You Go</p>
+    <h2 class="section-title">出發前準備</h2>
+    <p class="section-subtitle">確認每一項，讓旅程從容開始。</p>
+    <div class="summary-strip" id="prep-summary"></div>
+    <div id="prep-lists"></div>
+  </section>
+
+  <section id="tab-luggage" class="section">
+    <p class="section-eyebrow">Packing List</p>
+    <h2 class="section-title">行李清單</h2>
+    <p class="section-subtitle">整理好每一件，出門不落東西。</p>
+    <div class="lug-tabs">
+      <button class="lug-tab active" id="lug-tab-type">依類型分類</button>
+      <button class="lug-tab" id="lug-tab-imp">依重要程度</button>
+    </div>
+    <div class="lug-view active" id="lug-type-view"></div>
+    <div class="lug-view" id="lug-imp-view"></div>
+  </section>
+
+  <section id="tab-itinerary" class="section">
+    <p class="section-eyebrow">Daily Schedule</p>
+    <h2 class="section-title">每日行程</h2>
+    <p class="section-subtitle">一天一頁，記下想去的每個地方。</p>
+    <div id="days-container"></div>
+    <button class="add-day-btn" id="add-day-btn">＋ 新增一天</button>
+  </section>
+</div>
+
+<script>
+const STORE_KEY = 'travelplanner_v3';
+
+const DEFAULT_PREP = [
+  { id:'p0', icon:'📄', cls:'tc', title:'證件 & 文件', items:[
+    {id:'p0-0',label:'護照（有效期 6 個月以上）',done:false},
+    {id:'p0-1',label:'簽證 / 電子旅行授權',done:false},
+    {id:'p0-2',label:'機票電子票',done:false},
+    {id:'p0-3',label:'訂房確認信',done:false},
+    {id:'p0-4',label:'緊急聯絡人資料',done:false},
+  ]},
+  { id:'p1', icon:'🛡️', cls:'fo', title:'保險 & 金融', items:[
+    {id:'p1-0',label:'購買旅遊平安險',done:false},
+    {id:'p1-1',label:'購買海外醫療險',done:false},
+    {id:'p1-2',label:'通知銀行出國使用',done:false},
+    {id:'p1-3',label:'準備外幣現金',done:false},
+    {id:'p1-4',label:'確認海外刷卡手續費',done:false},
+  ]},
+  { id:'p2', icon:'📱', cls:'sk', title:'通訊 & 網路', items:[
+    {id:'p2-0',label:'購買海外漫遊方案',done:false},
+    {id:'p2-1',label:'或購買當地 SIM 卡',done:false},
+    {id:'p2-2',label:'下載離線地圖（Google Maps）',done:false},
+    {id:'p2-3',label:'下載翻譯 App',done:false},
+    {id:'p2-4',label:'確認飯店 Wi-Fi',done:false},
+  ]},
+  { id:'p3', icon:'⚡', cls:'go', title:'其他雜項', items:[
+    {id:'p3-0',label:'確認轉接插頭規格',done:false},
+    {id:'p3-1',label:'通知家人 / 朋友行程',done:false},
+    {id:'p3-2',label:'暫停或轉寄重要信件',done:false},
+    {id:'p3-3',label:'植物 / 寵物托育安排',done:false},
+  ]},
+];
+
+const DEFAULT_LUG = [
+  { id:'l0', icon:'👕', cls:'tc', title:'衣物配件', items:[
+    {id:'l0-0',label:'上衣',done:false,imp:'must'},
+    {id:'l0-1',label:'褲子 / 裙子',done:false,imp:'must'},
+    {id:'l0-2',label:'內衣褲',done:false,imp:'must'},
+    {id:'l0-3',label:'睡衣',done:false,imp:'opt'},
+    {id:'l0-4',label:'外套',done:false,imp:'must'},
+    {id:'l0-5',label:'泳衣',done:false,imp:'opt'},
+  ]},
+  { id:'l1', icon:'👟', cls:'fo', title:'鞋履', items:[
+    {id:'l1-0',label:'運動鞋',done:false,imp:'must'},
+    {id:'l1-1',label:'拖鞋 / 涼鞋',done:false,imp:'opt'},
+  ]},
+  { id:'l2', icon:'💻', cls:'sk', title:'3C & 電子', items:[
+    {id:'l2-0',label:'手機 & 充電線',done:false,imp:'must'},
+    {id:'l2-1',label:'行動電源',done:false,imp:'must'},
+    {id:'l2-2',label:'轉接插頭',done:false,imp:'must'},
+    {id:'l2-3',label:'耳機',done:false,imp:'opt'},
+    {id:'l2-4',label:'相機 & 記憶卡',done:false,imp:'opt'},
+  ]},
+  { id:'l3', icon:'🧴', cls:'go', title:'盥洗 & 美妝', items:[
+    {id:'l3-0',label:'牙刷 & 牙膏',done:false,imp:'must'},
+    {id:'l3-1',label:'洗髮精 & 沐浴乳',done:false,imp:'must'},
+    {id:'l3-2',label:'防曬乳',done:false,imp:'must'},
+    {id:'l3-3',label:'保養品',done:false,imp:'opt'},
+  ]},
+  { id:'l4', icon:'💊', cls:'tc', title:'醫藥 & 健康', items:[
+    {id:'l4-0',label:'常備藥（感冒、胃藥等）',done:false,imp:'must'},
+    {id:'l4-1',label:'個人處方藥',done:false,imp:'must'},
+    {id:'l4-2',label:'OK 繃 & 消毒棉',done:false,imp:'must'},
+  ]},
+  { id:'l5', icon:'📁', cls:'fo', title:'文件隨身', items:[
+    {id:'l5-0',label:'護照 & 簽證',done:false,imp:'must'},
+    {id:'l5-1',label:'機票 & 訂房確認',done:false,imp:'must'},
+    {id:'l5-2',label:'現金 & 信用卡',done:false,imp:'must'},
+  ]},
+];
+
+// ── State ──
+let S = { dest:'', ds:'', de:'', prep:null, lug:null, days:[] };
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) S = JSON.parse(raw);
+  } catch(e) {}
+  if (!S.prep) S.prep = JSON.parse(JSON.stringify(DEFAULT_PREP));
+  if (!S.lug)  S.lug  = JSON.parse(JSON.stringify(DEFAULT_LUG));
+  if (!S.days) S.days = [];
+}
+
+function saveState() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(S)); } catch(e) {}
+}
+
+// ── Show / Hide ──
+function showApp() {
+  document.getElementById('cover').style.display = 'none';
+  document.getElementById('app').style.display = 'block';
+  const t = document.getElementById('header-title');
+  t.innerHTML = S.dest ? '✈ <em>' + esc(S.dest) + '</em>' : '旅行計畫本';
+  t.style.fontFamily = "'Playfair Display', serif";
+  if (S.ds || S.de) {
+    const fmt = d => d ? d.replace(/-/g,'.') : '?';
+    document.getElementById('header-meta').textContent = fmt(S.ds) + ' → ' + fmt(S.de);
+  }
+  renderPrep(); renderLug(); renderDays();
+}
+
+function showCover() {
+  document.getElementById('cover').style.display = 'flex';
+  document.getElementById('app').style.display = 'none';
+}
+
+// ── Tab switch ──
+function switchTab(name) {
+  ['prep','luggage','itinerary'].forEach(id => {
+    document.getElementById('tab-'+id).classList.toggle('active', id===name);
+    document.getElementById('nav-'+id).classList.toggle('active', id===name);
+  });
+}
+
+// ── PREP ──
+function renderPrep() {
+  const total = S.prep.reduce((s,g)=>s+g.items.length,0);
+  const done  = S.prep.reduce((s,g)=>s+g.items.filter(i=>i.done).length,0);
+  const pct   = total ? Math.round(done/total*100) : 0;
+  document.getElementById('prep-summary').innerHTML =
+    card(done,'已完成') + card(total-done,'待辦') + card(pct+'%','整體進度');
+  document.getElementById('prep-lists').innerHTML =
+    S.prep.map((g,gi)=>group(g,gi,'prep',false)).join('');
+  bindGroupEvents('prep');
+}
+
+function card(num,lbl) {
+  return `<div class="summary-card"><div class="num">${num}</div><div class="lbl">${lbl}</div></div>`;
+}
+
+function group(g, gi, type, withBadge) {
+  const done=g.items.filter(i=>i.done).length, total=g.items.length;
+  const pct=total?(done/total*100):0;
+  const items = g.items.map((item,ii)=>`
+    <div class="ci${item.done?' done':''}" data-gi="${gi}" data-ii="${ii}" data-type="${type}">
+      <div class="checkbox" data-action="toggle" data-gi="${gi}" data-ii="${ii}" data-type="${type}"></div>
+      <label class="ci-label" data-action="toggle" data-gi="${gi}" data-ii="${ii}" data-type="${type}">${esc(item.label)}</label>
+      ${withBadge?`<span class="badge ${item.imp==='must'?'b-must':'b-opt'}">${item.imp==='must'?'必帶':'選帶'}</span>`:''}
+      <button class="ci-del" data-action="del" data-gi="${gi}" data-ii="${ii}" data-type="${type}">×</button>
+    </div>`).join('');
+  return `
+    <div class="checklist-group" id="cg-${type}-${gi}">
+      <div class="cg-header" data-action="collapse" data-gid="cg-${type}-${gi}">
+        <div class="cg-title"><div class="g-icon ${g.cls}">${g.icon}</div>${esc(g.title)}</div>
+        <div class="cg-right">
+          <div><div class="g-progress">${done}/${total}</div><div class="prog-wrap"><div class="prog-fill" style="width:${pct}%"></div></div></div>
+          <span class="chevron">▾</span>
+        </div>
+      </div>
+      <div class="cg-body">
+        <div class="ci-list">${items}</div>
+        <div class="add-row">
+          <input class="add-inp" type="text" placeholder="新增項目…" id="ainp-${type}-${gi}" />
+          ${withBadge?`<select class="add-sel" id="aimp-${type}-${gi}"><option value="must">必帶</option><option value="opt">選帶</option></select>`:''}
+          <button class="add-btn" data-action="add" data-gi="${gi}" data-type="${type}">＋ 新增</button>
+        </div>
+      </div>
+    </div>`;
+}
+
+function bindGroupEvents(type) {
+  const container = document.getElementById(type==='prep'?'prep-lists':(type==='luggage-type'?'lug-type-view':''));
+  if (!container) return;
+  container.addEventListener('click', handleListClick);
+  container.querySelectorAll('.add-inp').forEach(inp => {
+    inp.addEventListener('keydown', e => { if(e.key==='Enter') handleAdd(e.target); });
+  });
+}
+
+document.addEventListener('click', handleListClick);
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter' && e.target.classList.contains('add-inp')) handleAdd(e.target);
+  if (e.key === 'Enter' && e.target.classList.contains('add-ev-title')) {
+    const di = parseInt(e.target.dataset.di);
+    addEvent(di);
+  }
+});
+
+function handleListClick(e) {
+  const el = e.target.closest('[data-action]');
+  if (!el) return;
+  const action = el.dataset.action;
+  const type = el.dataset.type;
+  const gi = parseInt(el.dataset.gi);
+  const ii = parseInt(el.dataset.ii);
+
+  if (action === 'collapse') {
+    document.getElementById(el.dataset.gid).classList.toggle('cg-collapsed');
+  } else if (action === 'toggle') {
+    const arr = type==='prep' ? S.prep : S.lug;
+    arr[gi].items[ii].done = !arr[gi].items[ii].done;
+    saveState();
+    if(type==='prep') renderPrep(); else renderLug();
+  } else if (action === 'del') {
+    const arr = type==='prep' ? S.prep : S.lug;
+    arr[gi].items.splice(ii,1);
+    saveState();
+    if(type==='prep') renderPrep(); else renderLug();
+  } else if (action === 'add') {
+    handleAdd(document.getElementById(`ainp-${type}-${gi}`));
+  } else if (action === 'add-day') {
+    addDay();
+  } else if (action === 'del-day') {
+    const di = parseInt(el.dataset.di);
+    S.days.splice(di,1); saveState(); renderDays();
+  } else if (action === 'add-ev') {
+    const di = parseInt(el.dataset.di);
+    addEvent(di);
+  } else if (action === 'del-ev') {
+    const di = parseInt(el.dataset.di);
+    const ei = parseInt(el.dataset.ei);
+    S.days[di].events.splice(ei,1); saveState(); renderDays();
+  }
+}
+
+document.addEventListener('change', function(e) {
+  if (e.target.classList.contains('day-title-inp')) {
+    S.days[parseInt(e.target.dataset.di)].title = e.target.value; saveState();
+  }
+  if (e.target.classList.contains('ev-title-inp')) {
+    const di=parseInt(e.target.dataset.di), ei=parseInt(e.target.dataset.ei);
+    S.days[di].events[ei].title = e.target.value; saveState();
+  }
+  if (e.target.classList.contains('ev-note-inp')) {
+    const di=parseInt(e.target.dataset.di), ei=parseInt(e.target.dataset.ei);
+    S.days[di].events[ei].note = e.target.value; saveState();
+  }
+});
+
+function handleAdd(inp) {
+  if (!inp) return;
+  const label = inp.value.trim();
+  if (!label) return;
+  const parts = inp.id.replace('ainp-','').split('-');
+  const type = parts[0], gi = parseInt(parts[1]);
+  const id = Date.now()+'';
+  if (type==='prep') {
+    S.prep[gi].items.push({id,label,done:false});
+    saveState(); renderPrep();
+  } else {
+    const impEl = document.getElementById(`aimp-${type}-${gi}`);
+    S.lug[gi].items.push({id,label,done:false,imp:impEl?impEl.value:'opt'});
+    saveState(); renderLug();
+  }
+}
+
+// ── LUGGAGE ──
+function renderLug() {
+  document.getElementById('lug-type-view').innerHTML =
+    S.lug.map((g,gi)=>group(g,gi,'luggage',true)).join('');
+
+  const mustItems=[], optItems=[];
+  S.lug.forEach((g,gi)=>g.items.forEach((item,ii)=>{
+    const row = `<div class="ci${item.done?' done':''}">
+      <div class="checkbox" data-action="toggle" data-gi="${gi}" data-ii="${ii}" data-type="luggage"></div>
+      <label class="ci-label" data-action="toggle" data-gi="${gi}" data-ii="${ii}" data-type="luggage">${esc(item.label)}</label>
+      <span class="badge ${item.imp==='must'?'b-must':'b-opt'}">${item.imp==='must'?'必帶':'選帶'}</span>
+    </div>`;
+    if(item.imp==='must') mustItems.push(row); else optItems.push(row);
+  }));
+
+  const makeImpGroup = (icon,cls,title,rows) => {
+    const done=rows.filter(r=>r.includes('class="ci done')).length, total=rows.length;
+    const pct=total?(done/total*100):0;
+    return `<div class="checklist-group">
+      <div class="cg-header" data-action="collapse" data-gid="">
+        <div class="cg-title"><div class="g-icon ${cls}">${icon}</div>${title}</div>
+        <div class="cg-right">
+          <div><div class="g-progress">${done}/${total}</div><div class="prog-wrap"><div class="prog-fill" style="width:${pct}%"></div></div></div>
+          <span class="chevron">▾</span>
+        </div>
+      </div>
+      <div class="cg-body"><div class="ci-list">${rows.join('')}</div></div>
+    </div>`;
+  };
+
+  document.getElementById('lug-imp-view').innerHTML =
+    makeImpGroup('🔴','tc','必帶物品',mustItems) +
+    makeImpGroup('🟡','go','選帶物品',optItems);
+
+  // Fix collapse for imp groups
+  document.querySelectorAll('#lug-imp-view .cg-header').forEach((h,i) => {
+    h.addEventListener('click', () => h.closest('.checklist-group').classList.toggle('cg-collapsed'));
+  });
+}
+
+// ── ITINERARY ──
+function renderDays() {
+  document.getElementById('days-container').innerHTML = S.days.map((day,di)=>`
+    <div class="day-card">
+      <div class="day-header">
+        <div class="day-num">${String(di+1).padStart(2,'0')}<span>DAY</span></div>
+        <input class="day-title-inp" type="text" value="${esc(day.title)}" placeholder="今天去哪裡？" data-di="${di}" />
+        <button class="day-del" data-action="del-day" data-di="${di}">×</button>
+      </div>
+      <div>
+        ${day.events.map((ev,ei)=>`
+          <div class="ev-item">
+            <div class="ev-time">${esc(ev.time)}</div>
+            <div>
+              <input class="ev-title-inp" type="text" value="${esc(ev.title)}" placeholder="景點 / 活動" data-di="${di}" data-ei="${ei}" />
+              <input class="ev-note-inp" type="text" value="${esc(ev.note||'')}" placeholder="備注、地址、票價…" data-di="${di}" data-ei="${ei}" />
+            </div>
+            <button class="ev-del" data-action="del-ev" data-di="${di}" data-ei="${ei}">×</button>
+          </div>`).join('')}
+        <div class="add-ev-row">
+          <input class="add-ev-time" type="text" placeholder="時間" id="evtime-${di}" />
+          <input class="add-ev-title" type="text" placeholder="新增景點或活動…" id="evtitle-${di}" data-di="${di}" />
+          <button class="add-btn" data-action="add-ev" data-di="${di}">＋</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+
+function addDay() {
+  S.days.push({title:'',events:[]});
+  saveState(); renderDays();
+  setTimeout(()=>{
+    const cards=document.querySelectorAll('.day-card');
+    cards[cards.length-1]?.scrollIntoView({behavior:'smooth',block:'start'});
+  },80);
+}
+
+function addEvent(di) {
+  const t = document.getElementById('evtime-'+di);
+  const n = document.getElementById('evtitle-'+di);
+  if (!n||!n.value.trim()) return;
+  S.days[di].events.push({time:t?t.value.trim()||'—':'—', title:n.value.trim(), note:''});
+  saveState(); renderDays();
+}
+
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ── BOOT ──
+loadState();
+if (S.dest) showApp(); else showCover();
+
+document.getElementById('start-btn').addEventListener('click', function() {
+  S.dest = document.getElementById('dest-input').value.trim() || '旅行計畫';
+  S.ds   = document.getElementById('date-start').value;
+  S.de   = document.getElementById('date-end').value;
+  saveState();
+  showApp();
+});
+
+document.getElementById('nav-prep').addEventListener('click',      ()=>switchTab('prep'));
+document.getElementById('nav-luggage').addEventListener('click',   ()=>switchTab('luggage'));
+document.getElementById('nav-itinerary').addEventListener('click', ()=>switchTab('itinerary'));
+document.getElementById('add-day-btn').addEventListener('click',   addDay);
+
+document.getElementById('lug-tab-type').addEventListener('click', function(){
+  document.getElementById('lug-type-view').classList.add('active');
+  document.getElementById('lug-imp-view').classList.remove('active');
+  this.classList.add('active');
+  document.getElementById('lug-tab-imp').classList.remove('active');
+});
+document.getElementById('lug-tab-imp').addEventListener('click', function(){
+  document.getElementById('lug-imp-view').classList.add('active');
+  document.getElementById('lug-type-view').classList.remove('active');
+  this.classList.add('active');
+  document.getElementById('lug-tab-type').classList.remove('active');
+});
+</script>
+</body>
+</html>
